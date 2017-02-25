@@ -4,6 +4,17 @@
 # for a given keystroke and displaying them. Invoke it as follows:
 #
 #     find-blender-keystroke «keystroke»
+#
+# where the syntax of «keystroke» looks like
+#
+#      [«modifier»-[«modifier»-...]]«basekey».
+#
+# Here, «basekey» is one of the key/button names in the “event_codes”
+# set (below), while the “modifier” values come from “alt”, “ctrl” or
+# “shift” in any order. You can also use “any” as a modifier to
+# indicate a match against all keystrokes that have the specified
+# «basekey», regardless of their modifier settings. Otherwise the
+# modifier settings must match what you specify.
 #-
 
 blender=blender
