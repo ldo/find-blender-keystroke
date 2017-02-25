@@ -336,7 +336,7 @@ for keyconf in wm.keyconfigs :
                               (
                                 tuple
                                   (
-                                    m.attrname
+                                    m.value.upper()
                                     for m in MODIFIER
                                     if m != MODIFIER.ANY and getattr(item, m.attrname)
                                   )
