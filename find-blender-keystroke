@@ -10,11 +10,32 @@
 #      [«modifier»-[«modifier»-...]]«basekey».
 #
 # Here, «basekey» is one of the key/button names in the “event_codes”
-# set (below), while the “modifier” values come from “alt”, “ctrl” or
-# “shift” in any order. You can also use “any” as a modifier to
-# indicate a match against all keystrokes that have the specified
-# «basekey», regardless of their modifier settings. Otherwise the
-# modifier settings must match what you specify.
+# set (below), while the “modifier” values come from “alt”, “ctrl”,
+# “oskey” or “shift” in any order. You can also use “any” as a
+# modifier to indicate a match against all keystrokes that have the
+# specified «basekey», regardless of their modifier settings.
+# Otherwise the modifier settings must match what you specify.
+#
+# For example, the command
+#
+#     find-blender-keystroke q
+#
+# finds all bindings for the Q key with no modifiers pressed,
+#
+#     find-blender-keystroke ctrl-q
+#
+# looks for bindings for CTRL-Q,
+#
+#     find-blender-keystroke alt-ctrl-q
+#
+# looks for bindings for ALT-CTRL-Q, and
+#
+#     find-blender-keystroke any-q
+#
+# looks for all bindings for the Q key, with all combinations of modifiers.
+#
+# Copyright 2017 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# Licensed under CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>.
 #-
 
 blender=blender
