@@ -1,0 +1,359 @@
+#!/bin/bash
+#+
+# This script scans Blender’s key configurations, looking for definitions
+# for a given keystroke and displaying them. Invoke it as follows:
+#
+#     find-blender-keystroke «keystroke»
+#-
+
+blender=blender
+for ((;;)); do
+    if [ "${1:0:2}" != "--" ]; then
+        break
+    fi
+    if [ "$1" == "--" ]; then
+        shift
+        break
+    fi
+    opt="${1:2:${#1}}"
+    shift
+    val="${opt#*=}"
+    opt="${opt%%=*}"
+    if [ "$opt" = "blender" ]; then
+        blender="$val"
+    else
+        echo "$0: bad option $opt" 1>&2
+        exit 3
+    fi
+done
+if [ $# != 1 ]; then
+    echo $'Usage:\n\t'"$0" $'«keystroke»\n' 1>&2
+    exit 3
+fi
+export PARM_keystroke="$1"
+
+exec "$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
+import sys
+import os
+import enum
+import bpy
+
+event_codes = frozenset(
+  ( # event “type” codes (copied from source/blender/makesrna/intern/rna_wm.c):
+	"NONE",
+	"LEFTMOUSE",
+	"MIDDLEMOUSE",
+	"RIGHTMOUSE",
+	"BUTTON4MOUSE",
+	"BUTTON5MOUSE",
+	"BUTTON6MOUSE",
+	"BUTTON7MOUSE",
+	"ACTIONMOUSE",
+	"SELECTMOUSE",
+
+    "PEN",
+	"ERASER",
+
+    "MOUSEMOVE",
+	"INBETWEEN_MOUSEMOVE",
+	"TRACKPADPAN",
+	"TRACKPADZOOM",
+	"MOUSEROTATE",
+
+    "WHEELUPMOUSE",
+	"WHEELDOWNMOUSE",
+	"WHEELINMOUSE",
+	"WHEELOUTMOUSE",
+
+    "EVT_TWEAK_L",
+	"EVT_TWEAK_M",
+	"EVT_TWEAK_R",
+	"EVT_TWEAK_A",
+	"EVT_TWEAK_S",
+
+    "A",
+	"B",
+	"C",
+	"D",
+	"E",
+	"F",
+	"G",
+	"H",
+	"I",
+	"J",
+	"K",
+	"L",
+	"M",
+	"N",
+	"O",
+	"P",
+	"Q",
+	"R",
+	"S",
+	"T",
+	"U",
+	"V",
+	"W",
+	"X",
+	"Y",
+	"Z",
+
+    "ZERO",
+	"ONE",
+	"TWO",
+	"THREE",
+	"FOUR",
+	"FIVE",
+	"SIX",
+	"SEVEN",
+	"EIGHT",
+	"NINE",
+
+	"LEFT_CTRL",
+	"LEFT_ALT",
+	"LEFT_SHIFT",
+	"RIGHT_ALT",
+	"RIGHT_CTRL",
+	"RIGHT_SHIFT",
+
+	"OSKEY",
+	"GRLESS",
+	"ESC",
+	"TAB",
+	"RET",
+	"SPACE",
+	"LINE_FEED",
+	"BACK_SPACE",
+	"DEL",
+	"SEMI_COLON",
+	"PERIOD",
+	"COMMA",
+	"QUOTE",
+	"ACCENT_GRAVE",
+	"MINUS",
+	"PLUS",
+	"SLASH",
+	"BACK_SLASH",
+	"EQUAL",
+	"LEFT_BRACKET",
+	"RIGHT_BRACKET",
+	"LEFT_ARROW",
+	"DOWN_ARROW",
+	"RIGHT_ARROW",
+	"UP_ARROW",
+	"NUMPAD_2",
+	"NUMPAD_4",
+	"NUMPAD_6",
+	"NUMPAD_8",
+	"NUMPAD_1",
+	"NUMPAD_3",
+	"NUMPAD_5",
+	"NUMPAD_7",
+	"NUMPAD_9",
+	"NUMPAD_PERIOD",
+	"NUMPAD_SLASH",
+	"NUMPAD_ASTERIX",
+	"NUMPAD_0",
+	"NUMPAD_MINUS",
+	"NUMPAD_ENTER",
+	"NUMPAD_PLUS",
+	"F1",
+	"F2",
+	"F3",
+	"F4",
+	"F5",
+	"F6",
+	"F7",
+	"F8",
+	"F9",
+	"F10",
+	"F11",
+	"F12",
+	"F13",
+	"F14",
+	"F15",
+	"F16",
+	"F17",
+	"F18",
+	"F19",
+	"PAUSE",
+	"INSERT",
+	"HOME",
+	"PAGE_UP",
+	"PAGE_DOWN",
+	"END",
+
+
+	"MEDIA_PLAY",
+	"MEDIA_STOP",
+	"MEDIA_FIRST",
+	"MEDIA_LAST",
+
+	"TEXTINPUT",
+
+	"WINDOW_DEACTIVATE",
+	"TIMER",
+	"TIMER0",
+	"TIMER1",
+	"TIMER2",
+	"TIMER_JOBS",
+	"TIMER_AUTOSAVE",
+	"TIMER_REPORT",
+	"TIMERREGION",
+
+	"NDOF_MOTION",
+	"NDOF_BUTTON_MENU",
+	"NDOF_BUTTON_FIT",
+	"NDOF_BUTTON_TOP",
+	"NDOF_BUTTON_BOTTOM",
+	"NDOF_BUTTON_LEFT",
+	"NDOF_BUTTON_RIGHT",
+	"NDOF_BUTTON_FRONT",
+	"NDOF_BUTTON_BACK",
+	"NDOF_BUTTON_ISO1",
+	"NDOF_BUTTON_ISO2",
+	"NDOF_BUTTON_ROLL_CW",
+	"NDOF_BUTTON_ROLL_CCW",
+	"NDOF_BUTTON_SPIN_CW",
+	"NDOF_BUTTON_SPIN_CCW",
+	"NDOF_BUTTON_TILT_CW",
+	"NDOF_BUTTON_TILT_CCW",
+	"NDOF_BUTTON_ROTATE",
+	"NDOF_BUTTON_PANZOOM",
+	"NDOF_BUTTON_DOMINANT",
+	"NDOF_BUTTON_PLUS",
+	"NDOF_BUTTON_MINUS",
+	"NDOF_BUTTON_ESC",
+	"NDOF_BUTTON_ALT",
+	"NDOF_BUTTON_SHIFT",
+	"NDOF_BUTTON_CTRL",
+	"NDOF_BUTTON_1",
+	"NDOF_BUTTON_2",
+	"NDOF_BUTTON_3",
+	"NDOF_BUTTON_4",
+	"NDOF_BUTTON_5",
+	"NDOF_BUTTON_6",
+	"NDOF_BUTTON_7",
+	"NDOF_BUTTON_8",
+	"NDOF_BUTTON_9",
+	"NDOF_BUTTON_10",
+	"NDOF_BUTTON_A",
+	"NDOF_BUTTON_B",
+	"NDOF_BUTTON_C",
+  ))
+
+@enum.unique
+class MODIFIER(enum.Enum) :
+    "the valid key/mousestroke modifiers."
+    ANY = "any" # special case
+    SHIFT = "shift"
+    CTRL = "ctrl"
+    ALT = "alt"
+    OSKEY = "oskey"
+
+    @property
+    def attrname(self) :
+        "the name of the KeyMapItem attribute corresponding to this enum value."
+        return \
+            self.value
+    #end attrname
+
+#end MODIFIER
+
+class Keystroke :
+    "represents a keystroke."
+
+    def __init__(self, code, modifiers) :
+        assert \
+            (
+                code in event_codes
+            and
+                all(isinstance(m, MODIFIER) for m in modifiers)
+            and
+                (MODIFIER.ANY in modifiers) <= (len(modifiers) == 1)
+                  # ANY cannot be mixed with other modifiers
+            )
+        self.code = code
+        self.modifiers = frozenset(m for m in modifiers)
+    #end __init__
+
+#end Keystroke
+
+def parse_keystroke(s) :
+    pieces = s.split("-")
+    return \
+        Keystroke \
+          (
+            code = pieces[-1].upper(),
+            modifiers = tuple(MODIFIER[k.upper()] for k in pieces[:-1])
+          )
+#end parse_keystroke
+
+out = os.fdopen(5, "w")
+  # use a different fd from stdout, only way it seems to avoid
+  # output being polluted by Blender’s messages
+
+keystroke = parse_keystroke(os.getenv("PARM_keystroke"))
+
+exit_status = 0
+
+wm = bpy.data.window_managers[0]
+nr_found = 0
+for keyconf in wm.keyconfigs :
+    in_this_keyconf = False
+    for keymap in keyconf.keymaps :
+        in_this_keymap = False
+        for item in keymap.keymap_items :
+            if (
+                    item.type == keystroke.code
+                and
+                    (
+                        MODIFIER.ANY in keystroke.modifiers
+                    or
+                        all
+                          (
+                            getattr(item, m.attrname) == (m in keystroke.modifiers)
+                            for m in MODIFIER
+                            if m != MODIFIER.ANY
+                          )
+                    )
+            ) :
+                if not in_this_keyconf :
+                    out.write("* keyconf “%s”\n" % keyconf.name)
+                    in_this_keyconf = True
+                #end if
+                if not in_this_keymap :
+                    out.write(" * keymap “%s”\n" % keymap.name)
+                    in_this_keymap = True
+                #end if
+                nr_found += 1
+                out.write \
+                  (
+                        "    %s => %s\n"
+                    %
+                        (
+                            "-".join
+                              (
+                                tuple
+                                  (
+                                    m.attrname
+                                    for m in MODIFIER
+                                    if m != MODIFIER.ANY and getattr(item, m.attrname)
+                                  )
+                                +
+                                    (item.type,)
+                              ),
+                            item.idname,
+                            # TBD more info
+                        )
+                  )
+            #end if
+        #end for
+    #end for
+#end for
+out.write("Mappings found: %d\n" % nr_found)
+
+out.flush()
+sys.exit(exit_status)
+EOD
+)
