@@ -329,7 +329,7 @@ for keyconf in wm.keyconfigs :
                 nr_found += 1
                 out.write \
                   (
-                        "    %s => %s\n"
+                        "    %s => “%s”: %s %s %s\n"
                     %
                         (
                             "-".join
@@ -343,8 +343,11 @@ for keyconf in wm.keyconfigs :
                                 +
                                     (item.type,)
                               ),
+                            item.name,
                             item.idname,
-                            # TBD more info
+                            (lambda : None, lambda : dict(item.properties))[item.properties != None](),
+                            item.value,
+                            # could display more info
                         )
                   )
             #end if
