@@ -16,6 +16,12 @@
 # specified «basekey», regardless of their modifier settings.
 # Otherwise the modifier settings must match what you specify.
 #
+# Alternatively, invoke it as
+#
+#     find-blender-keystroke --list-keymods
+#
+# to list all non-modifier keys that are used as key-modifiers.
+#
 # For example, the command
 #
 #     find-blender-keystroke q
@@ -39,6 +45,7 @@
 #-
 
 blender=blender
+list_keymods=
 for ((;;)); do
     if [ "${1:0:2}" != "--" ]; then
         break
@@ -53,16 +60,21 @@ for ((;;)); do
     opt="${opt%%=*}"
     if [ "$opt" = "blender" ]; then
         blender="$val"
+    elif [ "$opt" = "list-keymods" ]; then
+        list_keymods=1
     else
         echo "$0: bad option $opt" 1>&2
         exit 3
     fi
 done
-if [ $# != 1 ]; then
-    echo $'Usage:\n\t'"$0" $'«keystroke»\n' 1>&2
+if [ \( ! $list_keymods -a $# != 1 \) -o \( $list_keymods -a $# != 0 \) ]; then
+    echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0" $'--list-keymods' 1>&2
     exit 3
 fi
-export PARM_keystroke="$1"
+export PARM_list_keymods="$list_keymods"
+if [ ! $list_keymods ]; then
+    export PARM_keystroke="$1"
+fi
 
 exec "$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
 import sys
@@ -348,74 +360,97 @@ out = os.fdopen(5, "w")
   # use a different fd from stdout, only way it seems to avoid
   # output being polluted by Blender’s messages
 
-keystroke = parse_keystroke(os.getenv("PARM_keystroke"))
+list_keymods = os.getenv("PARM_list_keymods", "") != ""
+if list_keymods :
+    keystroke = None
+else :
+    keystroke = parse_keystroke(os.getenv("PARM_keystroke"))
+#end if
 
 exit_status = 0
 
 wm = bpy.data.window_managers[0]
-nr_found = 0
-for keyconf in wm.keyconfigs :
-    in_this_keyconf = False
-    for keymap in keyconf.keymaps :
-        in_this_keymap = False
-        for item in keymap.keymap_items :
-            if (
-                    (keystroke.code == None or item.type == keystroke.code)
-                and
-                    (
-                        MODIFIER.ANY in keystroke.modifiers
-                    or
-                        all
-                          (
-                            getattr(item, m.attrname) == (m in keystroke.modifiers)
-                            for m in MODIFIER
-                            if m != MODIFIER.ANY
-                          )
-                    )
-                and
-                    (keystroke.keymod == None or item.key_modifier == keystroke.keymod)
-            ) :
-                if not in_this_keyconf :
-                    out.write("* keyconf “%s”\n" % keyconf.name)
-                    in_this_keyconf = True
+if list_keymods :
+    keymods = set()
+    for keyconf in wm.keyconfigs :
+        for keymap in keyconf.keymaps :
+            for item in keymap.keymap_items :
+                if item.key_modifier != "NONE" :
+                    keymods.add(item.key_modifier)
                 #end if
-                if not in_this_keymap :
-                    out.write(" * keymap “%s”\n" % keymap.name)
-                    in_this_keymap = True
-                #end if
-                nr_found += 1
-                out.write \
-                  (
-                        "    %s%s => “%s”: %s %s %s\n"
-                    %
-                        (
-                            (
-                                lambda : "",
-                                lambda : item.key_modifier + "-"
-                            )[item.key_modifier != "NONE"](),
-                            "-".join
-                              (
-                                tuple
-                                  (
-                                    m.value.upper()
-                                    for m in MODIFIER
-                                    if m != MODIFIER.ANY and getattr(item, m.attrname)
-                                  )
-                                +
-                                    (item.type,)
-                              ),
-                            item.name,
-                            item.idname,
-                            (lambda : None, lambda : dict(item.properties))[item.properties != None](),
-                            item.value,
-                            # could display more info
-                        )
-                  )
-            #end if
+            #end for
         #end for
     #end for
-#end for
-out.write("Mappings found: %d\n" % nr_found)
+    if len(keymods) != 0 :
+        out.write("Keymods: %s\n" % ", ".join(k for k in sorted(keymods)))
+    else :
+        out.write("No keymods found!?\n")
+    #end if
+else :
+    nr_found = 0
+    for keyconf in wm.keyconfigs :
+        in_this_keyconf = False
+        for keymap in keyconf.keymaps :
+            in_this_keymap = False
+            for item in keymap.keymap_items :
+                if (
+                        (keystroke.code == None or item.type == keystroke.code)
+                    and
+                        (
+                            MODIFIER.ANY in keystroke.modifiers
+                        or
+                            all
+                              (
+                                getattr(item, m.attrname) == (m in keystroke.modifiers)
+                                for m in MODIFIER
+                                if m != MODIFIER.ANY
+                              )
+                        )
+                    and
+                        (keystroke.keymod == None or item.key_modifier == keystroke.keymod)
+                ) :
+                    if not in_this_keyconf :
+                        out.write("* keyconf “%s”\n" % keyconf.name)
+                        in_this_keyconf = True
+                    #end if
+                    if not in_this_keymap :
+                        out.write(" * keymap “%s”\n" % keymap.name)
+                        in_this_keymap = True
+                    #end if
+                    nr_found += 1
+                    out.write \
+                      (
+                            "    %s%s => “%s”: %s %s %s\n"
+                        %
+                            (
+                                (
+                                    lambda : "",
+                                    lambda : item.key_modifier + "-"
+                                )[item.key_modifier != "NONE"](),
+                                "-".join
+                                  (
+                                    tuple
+                                      (
+                                        m.value.upper()
+                                        for m in MODIFIER
+                                        if m != MODIFIER.ANY and getattr(item, m.attrname)
+                                      )
+                                    +
+                                        (item.type,)
+                                  ),
+                                item.name,
+                                item.idname,
+                                (lambda : None, lambda : dict(item.properties))[item.properties != None](),
+                                item.value,
+                                # could display more info
+                            )
+                      )
+                #end if
+            #end for
+        #end for
+    #end for
+    out.write("Mappings found: %d\n" % nr_found)
+#end if
 
 out.flush()
 sys.exit(exit_status)
