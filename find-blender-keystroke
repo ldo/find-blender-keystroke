@@ -294,29 +294,53 @@ class MODIFIER(enum.Enum) :
 class Keystroke :
     "represents a keystroke."
 
-    def __init__(self, code, modifiers) :
+    def __init__(self, code, modifiers, keymod = None) :
         assert \
             (
-                code in event_codes
+                (code == None or code in event_codes)
             and
                 all(isinstance(m, MODIFIER) for m in modifiers)
             and
                 (MODIFIER.ANY in modifiers) <= (len(modifiers) == 1)
                   # ANY cannot be mixed with other modifiers
+            and
+                (keymod == None or keymod in event_codes)
             )
         self.code = code
         self.modifiers = frozenset(m for m in modifiers)
+        self.keymod = keymod
     #end __init__
 
 #end Keystroke
 
 def parse_keystroke(s) :
     pieces = s.split("-")
+    code = pieces[-1].upper()
+    if code == "ANY" :
+        code = None
+    #end if
+    modifiers = set()
+    keymod = None
+    for k in pieces[:-1] :
+        k = k.upper()
+        if k in MODIFIER.__members__.keys() :
+            modifiers.add(MODIFIER[k])
+        elif k in event_codes :
+            if keymod == None :
+                keymod = k
+            else :
+                raise AssertionError("only one keymod allowed")
+            #end if
+        else :
+            raise ValueError("unrecognized modifier “%s”" % k)
+        #end if
+    #end for
     return \
         Keystroke \
           (
-            code = pieces[-1].upper(),
-            modifiers = tuple(MODIFIER[k.upper()] for k in pieces[:-1])
+            code = code,
+            modifiers = modifiers,
+            keymod = keymod
           )
 #end parse_keystroke
 
@@ -336,7 +360,7 @@ for keyconf in wm.keyconfigs :
         in_this_keymap = False
         for item in keymap.keymap_items :
             if (
-                    item.type == keystroke.code
+                    (keystroke.code == None or item.type == keystroke.code)
                 and
                     (
                         MODIFIER.ANY in keystroke.modifiers
@@ -348,6 +372,8 @@ for keyconf in wm.keyconfigs :
                             if m != MODIFIER.ANY
                           )
                     )
+                and
+                    (keystroke.keymod == None or item.key_modifier == keystroke.keymod)
             ) :
                 if not in_this_keyconf :
                     out.write("* keyconf “%s”\n" % keyconf.name)
@@ -360,9 +386,13 @@ for keyconf in wm.keyconfigs :
                 nr_found += 1
                 out.write \
                   (
-                        "    %s => “%s”: %s %s %s\n"
+                        "    %s%s => “%s”: %s %s %s\n"
                     %
                         (
+                            (
+                                lambda : "",
+                                lambda : item.key_modifier + "-"
+                            )[item.key_modifier != "NONE"](),
                             "-".join
                               (
                                 tuple
