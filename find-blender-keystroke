@@ -420,13 +420,9 @@ else :
                     nr_found += 1
                     out.write \
                       (
-                            "    %s%s => “%s”: %s %s %s\n"
+                            "    %s => “%s”: %s %s %s\n"
                         %
                             (
-                                (
-                                    lambda : "",
-                                    lambda : item.key_modifier + "-"
-                                )[item.key_modifier != "NONE"](),
                                 "-".join
                                   (
                                     tuple
@@ -435,6 +431,11 @@ else :
                                         for m in MODIFIER
                                         if m != MODIFIER.ANY and getattr(item, m.attrname)
                                       )
+                                    +
+                                        (
+                                            (),
+                                            (item.key_modifier,),
+                                        )[item.key_modifier != "NONE"]
                                     +
                                         (item.type,)
                                   ),
