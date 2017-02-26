@@ -67,7 +67,7 @@ for ((;;)); do
         exit 3
     fi
 done
-if [ \( ! $list_keymods -a $# != 1 \) -o \( $list_keymods -a $# != 0 \) ]; then
+if [ \( ! "$list_keymods" -a $# != 1 \) -o \( "$list_keymods" -a \( $# != 0 \) \) ]; then
     echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0" $'--list-keymods' 1>&2
     exit 3
 fi
