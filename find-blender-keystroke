@@ -20,7 +20,11 @@
 #
 #     find-blender-keystroke --list-keymods
 #
-# to list all non-modifier keys that are used as key-modifiers.
+# to list all non-modifier keys that are used as key-modifiers, or
+#
+#     find-blender-keystroke --list-keymaps
+#
+# to list the names of all known keymaps.
 #
 # For example, the command
 #
@@ -45,7 +49,7 @@
 #-
 
 blender=blender
-list_keymods=
+list_function=
 for ((;;)); do
     if [ "${1:0:2}" != "--" ]; then
         break
@@ -61,18 +65,20 @@ for ((;;)); do
     if [ "$opt" = "blender" ]; then
         blender="$val"
     elif [ "$opt" = "list-keymods" ]; then
-        list_keymods=1
+        list_function="keymods"
+    elif [ "$opt" = "list-keymaps" ]; then
+        list_function="keymaps"
     else
         echo "$0: bad option $opt" 1>&2
         exit 3
     fi
 done
-if [ \( ! "$list_keymods" -a $# != 1 \) -o \( "$list_keymods" -a \( $# != 0 \) \) ]; then
-    echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0" $'--list-keymods' 1>&2
+if [ \( -z "$list_function" -a $# != 1 \) -o \( -n "$list_function" -a \( $# != 0 \) \) ]; then
+    echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0" $'--list-keymods\nor\n\t'"$0" $'--list-keymaps' 1>&2
     exit 3
 fi
-export PARM_list_keymods="$list_keymods"
-if [ ! $list_keymods ]; then
+export PARM_list_function="$list_function"
+if [ -z "$list_function" ]; then
     export PARM_keystroke="$1"
 fi
 
@@ -360,8 +366,8 @@ out = os.fdopen(5, "w")
   # use a different fd from stdout, only way it seems to avoid
   # output being polluted by Blender’s messages
 
-list_keymods = os.getenv("PARM_list_keymods", "") != ""
-if list_keymods :
+list_function = os.getenv("PARM_list_function", "")
+if list_function != "" :
     keystroke = None
 else :
     keystroke = parse_keystroke(os.getenv("PARM_keystroke"))
@@ -370,7 +376,7 @@ else :
 exit_status = 0
 
 wm = bpy.data.window_managers[0]
-if list_keymods :
+if list_function == "keymods" :
     keymods = set()
     for keyconf in wm.keyconfigs :
         for keymap in keyconf.keymaps :
@@ -386,6 +392,17 @@ if list_keymods :
     else :
         out.write("No keymods found!?\n")
     #end if
+elif list_function == "keymaps" :
+    for keyconf in wm.keyconfigs :
+        in_this_keyconf = False
+        for keymap in keyconf.keymaps :
+            if not in_this_keyconf :
+                out.write("keymaps in keyconf “%s”:\n" % keyconf.name)
+                in_this_keyconf = True
+            #end if
+            out.write("  “%s”\n" % keymap.name)
+        #end for
+    #end for
 else :
     nr_found = 0
     for keyconf in wm.keyconfigs :
