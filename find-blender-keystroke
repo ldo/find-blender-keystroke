@@ -295,9 +295,9 @@ event_codes = frozenset(
 class MODIFIER(enum.Enum) :
     "the valid key/mousestroke modifiers."
     ANY = "any" # special case
-    SHIFT = "shift"
-    CTRL = "ctrl"
     ALT = "alt"
+    CTRL = "ctrl"
+    SHIFT = "shift"
     OSKEY = "oskey"
 
     @property
