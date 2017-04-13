@@ -309,21 +309,39 @@ class MODIFIER(enum.Enum) :
 
 #end MODIFIER
 
+class KeystrokeError(Exception) :
+
+    def __init__(self, msg) :
+        self.msg = msg
+    #end __init__
+
+#end KeystrokeError
+
 class Keystroke :
     "represents a keystroke."
 
     def __init__(self, code, modifiers, keymod = None) :
-        assert \
-            (
-                (code == None or code in event_codes)
-            and
-                all(isinstance(m, MODIFIER) for m in modifiers)
-            and
-                (MODIFIER.ANY in modifiers) <= (len(modifiers) == 1)
-                  # ANY cannot be mixed with other modifiers
-            and
-                (keymod == None or keymod in event_codes)
-            )
+        if code != None and code not in event_codes :
+            raise KeystrokeError("invalid event code “%s”" % code)
+        #end if
+        invalid_modifiers = set(m for m in modifiers if not isinstance(m, MODIFIER))
+        if len(invalid_modifiers) != 0 :
+            raise KeystrokeError \
+              (
+                    "invalid %s “%s”"
+                %
+                    (
+                        ("modifier", "modifiers")[len(invalid_modifiers) > 1],
+                        ", ".join(sorted(invalid_modifiers)),
+                    )
+              )
+        #end if
+        if (MODIFIER.ANY in modifiers) > (len(modifiers) == 1) :
+            raise KeystrokeError("modifier “any” cannot be mixed with other modifiers")
+        #end if
+        if keymod != None and keymod not in event_codes :
+            raise KeystrokeError("invalid keymod event code “%s”" % code)
+        #end if
         self.code = code
         self.modifiers = frozenset(m for m in modifiers)
         self.keymod = keymod
@@ -347,10 +365,10 @@ def parse_keystroke(s) :
             if keymod == None :
                 keymod = k
             else :
-                raise AssertionError("only one keymod allowed")
+                raise KeystrokeError("only one keymod allowed")
             #end if
         else :
-            raise ValueError("unrecognized modifier “%s”" % k)
+            raise KeystrokeError("unrecognized modifier “%s”" % k)
         #end if
     #end for
     return \
