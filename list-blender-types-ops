@@ -1,0 +1,121 @@
+#!/bin/bash
+#+
+# This script scans Blender’s bpy.types module, looking for all the
+# special (and currently undocumented) object classes which can be
+# used for customizing the user interface.
+#
+# These classes have names of the form «prefix»_«type»_«restofname»,
+# where «prefix» is an all-uppercase mnemonic for the category of
+# object (mostly a window type, e.g. INFO for the Info window, which
+# is where the main menu bar appears, though there are also names for
+# major object categories like MESH and LAMP), and «type» indicates
+# the class of object: HT for a window header UI object
+# (bpy.types.Header), MT for a menu (bpy.types.Menu), OT for an
+# operator, and PT for a panel (bpy.types.Panel).
+#
+# The following are the operator categories I know about:
+#
+#    «prefix»        Meaning
+#    --------        -------
+#     BONE           Bone properties
+#     CLIP           Movie Clip Editor
+#     CLOTH          Cloth properties
+#     CONSOLE        Python Console
+#     CYCLES         Cycles Renderer
+#     DATA           Object Data Context
+#     DOPESHEET      Dopesheet
+#     FILEBROWSER    File browser
+#     FLUID          Fluid simulation
+#     GRAPH          Graph Editor
+#     IMAGE          UV/Image Editor
+#     INFO           Info Window
+#     LAMP           Lamp properties
+#     LOGIC          Logic Editor
+#     MASK           Mask properties
+#     MATERIAL       Material properties
+#     MESH           Mesh properties
+#     NLA            NLA Editor
+#     NODE           Node Editor
+#     OBJECT         Object properties
+#     OUTLINER       Outliner
+#     PARTICLE       Particle properties
+#     PHYSICS        Physics properties
+#     PROPERTIES     Properties properties
+#     RENDERLAYER    Render layer properties
+#     RENDER         Render properties
+#     SCENE          Scene properties
+#     SEQUENCER      Sequencer window
+#     TEXTURE        Texture properties
+#     TEXT           Text Editor
+#     TIME           Timeline
+#     USERPREF       User Preferences
+#     VIEW3D         3D View
+#     WM             Window Manager
+#     WORLD          World properties
+#
+#
+# The OT ones seem to correspond directly to objects in bpy.ops,
+# but at a lower level; it’s probably easier just to use the official
+# bpy.ops objects. As for the HT, MT and PT objects, these all have
+# append, prepend and remove methods that you can use to customize
+# them: append adds a widget at the end (right or bottom), while
+# prepend puts it at the front (left or top).
+#
+# Copyright 2017 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# Licensed under CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>.
+#-
+
+blender=blender
+for ((;;)); do
+    if [ "${1:0:2}" != "--" ]; then
+        break
+    fi
+    if [ "$1" == "--" ]; then
+        shift
+        break
+    fi
+    opt="${1:2:${#1}}"
+    shift
+    val="${opt#*=}"
+    opt="${opt%%=*}"
+    if [ "$opt" = "blender" ]; then
+        blender="$val"
+    else
+        echo "$0: bad option $opt" 1>&2
+        exit 3
+    fi
+done
+
+"$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
+
+import sys
+import os
+import re
+import bpy
+
+out = os.fdopen(5, "w")
+  # use a different fd from stdout, only way it seems to avoid
+  # output being polluted by Blender’s messages
+
+name_groups = {}
+
+for name in dir(bpy.types) :
+    name_parts = re.search(r"^([A-Z0-9]+_[A-Z]T)_(\w+)$", name)
+    if name_parts  != None :
+        # out.write(name + "\n")
+        prefix, rest = name_parts.groups()
+        if prefix not in name_groups :
+            name_groups[prefix] = set()
+        #end if
+        if rest in name_groups[prefix] :
+            sys.stderr.write("duplicate name %s_%s\n" % (prefix, rest))
+        #end if
+        name_groups[prefix].add(rest)
+    #end if
+#end for
+
+for prefix in sorted(name_groups) :
+    out.write(prefix + ": " + ", ".join(sorted(name_groups[prefix])) + "\n")
+#end for
+EOD
+)
