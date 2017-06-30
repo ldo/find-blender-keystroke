@@ -53,7 +53,6 @@
 #     WM             Window Manager
 #     WORLD          World properties
 #
-#
 # The OT ones seem to correspond directly to objects in bpy.ops,
 # but at a lower level; it’s probably easier just to use the official
 # bpy.ops objects. As for the HT, MT and PT objects, these all have
@@ -87,7 +86,6 @@ for ((;;)); do
 done
 
 "$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
-
 import sys
 import os
 import re
