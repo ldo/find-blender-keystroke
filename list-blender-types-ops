@@ -202,13 +202,15 @@ class WikiTableFormat(Format) :
     #end __init__
 
     def collect(self, name, prefix, category, rest) :
-        if prefix not in self.name_groups :
-            self.name_groups[prefix] = {"HT" : set(), "MT" : set(), "PT" : set()}
-              # ignore "OT"
-        #end if
-        name_group = self.name_groups[prefix]
-        if category in name_group :
-            name_group[category].add(name)
+        if category != "OT" :
+            if prefix not in self.name_groups :
+                self.name_groups[prefix] = {"HT" : set(), "MT" : set(), "PT" : set()}
+                  # ignore "OT"
+            #end if
+            name_group = self.name_groups[prefix]
+            if category in name_group :
+                name_group[category].add(name)
+            #end if
         #end if
     #end collect
 
