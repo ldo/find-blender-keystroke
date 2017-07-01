@@ -2,7 +2,17 @@
 #+
 # This script scans Blender’s bpy.types module, looking for all the
 # special (and currently undocumented) object classes which can be
-# used for customizing the user interface.
+# used for customizing the user interface. Invoke it as follows:
+#
+#     list-blender-types-ops [--blender=«blender»] [--format=«format»]
+#
+# where «blender» is the path of the Blender executable (if omitted,
+# it is found in the PATH), and «format» is the output format, as follows:
+#
+#     grouped -- a simple text listing, with one line per
+#        group+category (default if no format is specified)
+#     wikitable -- a formatted table as per the one used at
+#         <https://en.wikibooks.org/wiki/Blender_3D:_Noob_to_Pro/Advanced_Tutorials/Python_Scripting/Object,_Action,_Settings>
 #
 # These classes have names of the form «prefix»_«type»_«restofname»,
 # where «prefix» is an all-uppercase mnemonic for the category of
@@ -13,45 +23,8 @@
 # (bpy.types.Header), MT for a menu (bpy.types.Menu), OT for an
 # operator, and PT for a panel (bpy.types.Panel).
 #
-# The following are the operator categories I know about:
-#
-#    «prefix»        Meaning
-#    --------        -------
-#     BONE           Bone properties
-#     CLIP           Movie Clip Editor
-#     CLOTH          Cloth properties
-#     CONSOLE        Python Console
-#     CYCLES         Cycles Renderer
-#     DATA           Object Data Context
-#     DOPESHEET      Dopesheet
-#     FILEBROWSER    File browser
-#     FLUID          Fluid simulation
-#     GRAPH          Graph Editor
-#     IMAGE          UV/Image Editor
-#     INFO           Info Window
-#     LAMP           Lamp properties
-#     LOGIC          Logic Editor
-#     MASK           Mask properties
-#     MATERIAL       Material properties
-#     MESH           Mesh properties
-#     NLA            NLA Editor
-#     NODE           Node Editor
-#     OBJECT         Object properties
-#     OUTLINER       Outliner
-#     PARTICLE       Particle properties
-#     PHYSICS        Physics properties
-#     PROPERTIES     Properties properties
-#     RENDERLAYER    Render layer properties
-#     RENDER         Render properties
-#     SCENE          Scene properties
-#     SEQUENCER      Sequencer window
-#     TEXTURE        Texture properties
-#     TEXT           Text Editor
-#     TIME           Timeline
-#     USERPREF       User Preferences
-#     VIEW3D         3D View
-#     WM             Window Manager
-#     WORLD          World properties
+# The operator categories I know about are listed below, in
+# the variable “prefix_descriptions”.
 #
 # The OT ones seem to correspond directly to objects in bpy.ops,
 # but at a lower level; it’s probably easier just to use the official
@@ -65,6 +38,7 @@
 #-
 
 blender=blender
+format=grouped
 for ((;;)); do
     if [ "${1:0:2}" != "--" ]; then
         break
@@ -79,41 +53,233 @@ for ((;;)); do
     opt="${opt%%=*}"
     if [ "$opt" = "blender" ]; then
         blender="$val"
+    elif [ "$opt" = "format" ]; then
+        format="$val"
     else
         echo "$0: bad option $opt" 1>&2
         exit 3
     fi
 done
+export PARM_format="$format"
 
 "$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
 import sys
 import os
 import re
+import getopt
 import bpy
 
 out = os.fdopen(5, "w")
   # use a different fd from stdout, only way it seems to avoid
   # output being polluted by Blender’s messages
 
-name_groups = {}
+prefix_descriptions = \
+    ( # (prefix, meaning)
+        ("ACTION", "Action Editor"),
+        ("ANIM", "Animation editing"),
+        ("ARMATURE", "Armature objects"),
+        ("BOID", "Boid particle rules"),
+        ("BONE", "Bone properties"),
+        ("BUTTONS", "Buttons for directory/file browsers, toolbox?"),
+        ("BRUSH", "Brush properties"),
+        ("CACHEFILE", "?"),
+        ("CAMERA", "Camera presets"),
+        ("CLIP", "Movie Clip Editor"),
+        ("CLOTH", "Cloth properties"),
+        ("CONSOLE", "Python Console"),
+        ("CONSTRAINT", "Object constraints"),
+        ("CURVE", "Curve objects"),
+        ("CYCLES", "Cycles Renderer"),
+        ("DATA", "Object Data Context"),
+        ("DOPESHEET", "Dopesheet"),
+        ("DPAINT", "?"),
+        ("ED", "Undo/redo operators"),
+        ("FILE", "File management"),
+        ("FILEBROWSER", "File browser"),
+        ("FLUID", "Fluid simulation"),
+        ("FONT", "Text objects"),
+        ("GPENCIL", "Grease Pencil"),
+        ("GRAPH", "Graph Editor"),
+        ("GROUP", "Group operators"),
+        ("IMAGE", "UV/Image Editor"),
+        ("INFO", "Info Window"),
+        ("LAMP", "Lamp properties"),
+        ("LATTICE", "Lattice objects"),
+        ("LOGIC", "Logic Editor"),
+        ("MASK", "Mask properties"),
+        ("MARKER", "Timeline markers"),
+        ("MATERIAL", "Material properties"),
+        ("MBALL", "Metaball objects"),
+        ("MESH", "Mesh properties"),
+        ("NLA", "NLA Editor"),
+        ("NODE", "Node Editor"),
+        ("OBJECT", "Object properties"),
+        ("OUTLINER", "Outliner"),
+        ("PAINT", "Texture/Weight/Vertex Paint"),
+        ("PAINTCURVE", "Editing of paint response curves"),
+        ("PALETTE", "Palette operators"),
+        ("PARTICLE", "Particle properties"),
+        ("PHYSICS", "Physics properties"),
+        ("POSE", "Pose Mode editing"),
+        ("POSELIB", "Poselib operators"),
+        ("PROPERTIES", "Properties properties"),
+        ("PTCACHE", "Point-cache baking operators"),
+        ("RENDERLAYER", "Render layer properties"),
+        ("RENDER", "Render properties"),
+        ("RIGIDBODY", "Rigid Body physics"),
+        ("SCENE", "Scene properties"),
+        ("SCREEN", "Screen layout"),
+        ("SCRIPT", "Script loading/execution"),
+        ("SCULPT", "Sculpt Mode"),
+        ("SEQUENCER", "Sequencer window"),
+        ("SKETCH", "?"),
+        ("SOUND", "Sound objects"),
+        ("SURFACE", "NURBS surface objects"),
+        ("TEXTURE", "Texture properties"),
+        ("TEXT", "Text Editor"),
+        ("TIME", "Timeline"),
+        ("TRANSFORM", "Transformation operators"),
+        ("UI", "Various user interface operators"),
+        ("USERPREF", "User Preferences"),
+        ("UV", "UV unwrapping"),
+        ("VIEW2D", "2D View editors"),
+        ("VIEW3D", "3D View"),
+        ("WM", "Window Manager"),
+        ("WORLD", "World properties"),
+    )
+category_names = \
+    (
+        ("HT", "Header"),
+        ("MT", "Menu"),
+        ("PT", "Panel"),
+        ("OT", "Operator"),
+    )
 
-for name in dir(bpy.types) :
-    name_parts = re.search(r"^([A-Z0-9]+_[A-Z]T)_(\w+)$", name)
-    if name_parts  != None :
-        # out.write(name + "\n")
-        prefix, rest = name_parts.groups()
-        if prefix not in name_groups :
-            name_groups[prefix] = set()
+class Format :
+    "abstract base class for different kinds of output formatting.\n" \
+    "\n" \
+    "Subclasses should define the following methods:\n" \
+    "\n" \
+    "    collect(self, name, prefix, category, rest)\n" \
+    "\n" \
+    "which is called for each operator found, and\n" \
+    "\n" \
+    "    finish(self, out)\n" \
+    "\n" \
+    "which is called at the end to write the complete report to out."
+    pass
+#end Format
+
+class GroupedFormat(Format) :
+
+    def __init__(self) :
+        self.name_groups = {}
+    #end __init__
+
+    def collect(self, name, prefix, category, rest) :
+        prefix = prefix + "_" + category
+        if prefix not in self.name_groups :
+            self.name_groups[prefix] = set()
         #end if
-        if rest in name_groups[prefix] :
+        if rest in self.name_groups[prefix] :
             sys.stderr.write("duplicate name %s_%s\n" % (prefix, rest))
         #end if
-        name_groups[prefix].add(rest)
+        self.name_groups[prefix].add(rest)
+    #end collect
+
+    def finish(self, out) :
+        for prefix in sorted(self.name_groups) :
+            out.write(prefix + ": " + ", ".join(sorted(self.name_groups[prefix])) + "\n")
+        #end for
+    #end finish
+
+#end GroupedFormat
+
+class WikiTableFormat(Format) :
+
+    def __init__(self) :
+        self.name_groups = {}
+    #end __init__
+
+    def collect(self, name, prefix, category, rest) :
+        if prefix not in self.name_groups :
+            self.name_groups[prefix] = {"HT" : set(), "MT" : set(), "PT" : set()}
+              # ignore "OT"
+        #end if
+        name_group = self.name_groups[prefix]
+        if category in name_group :
+            name_group[category].add(name)
+        #end if
+    #end collect
+
+    def finish(self, out) :
+        out.write \
+          (
+            "{| class=\"wikitable\"\n"
+            "|-\n"
+            "! Operator Category !! Header !! Menu !! Panel\n"
+          )
+        reported = set()
+        omitted = set()
+        for prefix, description in prefix_descriptions :
+            reported.add(prefix)
+            if prefix in self.name_groups :
+                out.write("|-\n")
+                out.write("| ")
+                out.write(description)
+                for category, category_name in category_names :
+                    if category != "OT" :
+                        out.write(" || ")
+                        out.write(", ".join(sorted(self.name_groups[prefix][category])))
+                    #end if
+                #end for
+                out.write("\n")
+            else :
+                omitted.add(prefix)
+            #end if
+        #end for
+        unreported = set(prefix for prefix in self.name_groups if prefix not in reported)
+        if len(unreported) != 0 :
+            sys.stderr.write \
+              (
+                    "Unreported operators of type %s\n"
+                %
+                    ", ".join(repr(prefix) for prefix in sorted(unreported))
+              )
+        #end if
+        if len(omitted) != 0 :
+            sys.stderr.write \
+              (
+                    "No operators of type %s\n"
+                %
+                    ", ".join(repr(prefix) for prefix in sorted(omitted))
+              )
+        #end if
+        out.write("|}\n")
+    #end finish
+
+#end WikiTableFormat
+
+formats = \
+    {
+        "grouped" : GroupedFormat,
+        "wikitable" : WikiTableFormat,
+    }
+
+format = os.environ["PARM_format"]
+if format not in formats :
+    raise getopt.GetoptError("unknown --format option %s" % repr(format))
+#end if
+
+formatter = formats[format]()
+for name in dir(bpy.types) :
+    name_parts = re.search(r"^([A-Z0-9]+)_([A-Z]T)_(\w+)$", name)
+    if name_parts  != None :
+        # out.write(name + "\n")
+        prefix, category, rest = name_parts.groups()
+        formatter.collect(name, prefix, category, rest)
     #end if
 #end for
-
-for prefix in sorted(name_groups) :
-    out.write(prefix + ": " + ", ".join(sorted(name_groups[prefix])) + "\n")
-#end for
+formatter.finish(out)
 EOD
 )
