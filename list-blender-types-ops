@@ -195,7 +195,18 @@ class GroupedFormat(Format) :
 
 #end GroupedFormat
 
-class WikiTableFormat(Format) :
+class TableFormat(Format) :
+    "abstract base class for formatting output as a table."
+    "\n" \
+    "Subclasses should define the following methods:\n" \
+    "\n" \
+    "    write_header(self, out, col_names)\n" \
+    "    start_row(self, out, description)\n" \
+    "    write_cell(self, out, contents)\n" \
+    "    finish_row(self, out)\n" \
+    "    write_trailer(self, out)\n" \
+    "\n" \
+    "which will be invoked at appropriate points in the table generation."
 
     def __init__(self) :
         self.name_groups = {}
@@ -215,31 +226,24 @@ class WikiTableFormat(Format) :
     #end collect
 
     def finish(self, out) :
-        out.write \
-          (
-            "{| class=\"wikitable\"\n"
-            "|-\n"
-            "! Operator Category !! Header !! Menu !! Panel\n"
-          )
+        self.write_header(out, ["Operator Category", "Header", "Menu", "Panel"])
         reported = set()
         omitted = set()
         for prefix, description in prefix_descriptions :
             reported.add(prefix)
             if prefix in self.name_groups :
-                out.write("|-\n")
-                out.write("| ")
-                out.write(description)
+                self.start_row(out, description)
                 for category, category_name in category_names :
                     if category != "OT" :
-                        out.write(" || ")
-                        out.write(", ".join(sorted(self.name_groups[prefix][category])))
+                        self.write_cell(out, ", ".join(sorted(self.name_groups[prefix][category])))
                     #end if
                 #end for
-                out.write("\n")
+                self.finish_row(out)
             else :
                 omitted.add(prefix)
             #end if
         #end for
+        self.write_trailer(out)
         unreported = set(prefix for prefix in self.name_groups if prefix not in reported)
         if len(unreported) != 0 :
             sys.stderr.write \
@@ -257,15 +261,75 @@ class WikiTableFormat(Format) :
                     ", ".join(repr(prefix) for prefix in sorted(omitted))
               )
         #end if
-        out.write("|}\n")
     #end finish
 
+#end TableFormat
+
+class WikiTableFormat(TableFormat) :
+
+    def write_header(self, out, col_names) :
+        out.write \
+          (
+                "{| class=\"wikitable\"\n"
+                "|-\n"
+                "! %s\n"
+            %
+                " !! ".join(col_names)
+          )
+    #end write_header
+
+    def start_row(self, out, description) :
+        out.write("|-\n")
+        out.write("| ")
+        out.write(description)
+    #end start_row
+
+    def write_cell(self, out, contents) :
+        out.write(" || ")
+        out.write(contents)
+    #end write_cell
+
+    def finish_row(self, out) :
+        out.write("\n")
+    #end finish_row
+
+    def write_trailer(self, out) :
+        out.write("|}\n")
+    #end write_trailer
+
 #end WikiTableFormat
+
+class HTMLTableFormat(TableFormat) :
+
+    def write_header(self, out, col_names) :
+        out.write("<TABLE>\n<TR>\n")
+        out.write("".join("<TH>%s</TH>" % name for name in col_names))
+        out.write("</TR>\n")
+    #end write_header
+
+    def start_row(self, out, description) :
+        out.write("<TR><TD>%s</TD>" % description)
+    #end start_row
+
+    def write_cell(self, out, contents) :
+        out.write("<TD>%s</TD>" % ("&nbsp;", contents)[len(contents) != 0])
+    #end write_cell
+
+    def finish_row(self, out) :
+        out.write("</TR>\n")
+    #end finish_row
+
+    def write_trailer(self, out) :
+        out.write("</TABLE>\n")
+    #end write_trailer
+
+#end HTMLTableFormat
 
 formats = \
     {
         "grouped" : GroupedFormat,
         "wikitable" : WikiTableFormat,
+        "htmltable" : HTMLTableFormat,
     }
 
 format = os.environ["PARM_format"]
