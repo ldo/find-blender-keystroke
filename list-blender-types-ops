@@ -283,5 +283,6 @@ for name in dir(bpy.types) :
     #end if
 #end for
 formatter.finish(out)
+out.flush()
 EOD
 )
