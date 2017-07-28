@@ -17,6 +17,9 @@
 # Otherwise the modifier settings must match what you specify.
 #
 # Alternatively, invoke it as
+#     find-blender-keystroke --find-operator «operator-name»
+# to find all keystrokes that invoke the operator named «operator-name»,
+# or as
 #
 #     find-blender-keystroke --list-keymods
 #
@@ -50,6 +53,7 @@
 
 blender=blender
 list_function=
+find_operator=
 for ((;;)); do
     if [ "${1:0:2}" != "--" ]; then
         break
@@ -64,6 +68,8 @@ for ((;;)); do
     opt="${opt%%=*}"
     if [ "$opt" = "blender" ]; then
         blender="$val"
+    elif [ "$opt" = "find-operator" ]; then
+        find_operator=1
     elif [ "$opt" = "list-keymods" ]; then
         list_function="keymods"
     elif [ "$opt" = "list-keymaps" ]; then
@@ -81,6 +87,7 @@ export PARM_list_function="$list_function"
 if [ -z "$list_function" ]; then
     export PARM_keystroke="$1"
 fi
+export PARM_find_operator="$find_operator"
 
 exec "$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
 import sys
@@ -385,10 +392,15 @@ out = os.fdopen(5, "w")
   # output being polluted by Blender’s messages
 
 list_function = os.getenv("PARM_list_function", "")
-if list_function != "" :
-    keystroke = None
-else :
-    keystroke = parse_keystroke(os.getenv("PARM_keystroke"))
+find_operator = os.getenv("PARM_find_operator", "") != ""
+keystroke = None
+operator_name = None
+if list_function == "" :
+    if find_operator :
+        operator_name = os.getenv("PARM_keystroke")
+    else :
+        keystroke = parse_keystroke(os.getenv("PARM_keystroke"))
+    #end if
 #end if
 
 exit_status = 0
@@ -429,20 +441,26 @@ else :
             in_this_keymap = False
             for item in keymap.keymap_items :
                 if (
-                        (keystroke.code == None or item.type == keystroke.code)
-                    and
-                        (
-                            MODIFIER.ANY in keystroke.modifiers
-                        or
-                            all
-                              (
-                                getattr(item, m.attrname) == (m in keystroke.modifiers)
-                                for m in MODIFIER
-                                if m != MODIFIER.ANY
-                              )
-                        )
-                    and
-                        (keystroke.keymod == None or item.key_modifier == keystroke.keymod)
+                            operator_name != None
+                        and
+                            item.idname == operator_name
+                    or
+                            keystroke != None
+                        and
+                            (keystroke.code == None or item.type == keystroke.code)
+                        and
+                            (
+                                MODIFIER.ANY in keystroke.modifiers
+                            or
+                                all
+                                  (
+                                    getattr(item, m.attrname) == (m in keystroke.modifiers)
+                                    for m in MODIFIER
+                                    if m != MODIFIER.ANY
+                                  )
+                            )
+                        and
+                            (keystroke.keymod == None or item.key_modifier == keystroke.keymod)
                 ) :
                     if not in_this_keyconf :
                         out.write("* keyconf “%s”\n" % keyconf.name)
