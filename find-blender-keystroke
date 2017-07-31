@@ -473,7 +473,7 @@ else :
                     nr_found += 1
                     out.write \
                       (
-                            "    %s => “%s”: %s %s %s\n"
+                            "    %s => “%s”: %s %s %s %s%s%s\n"
                         %
                             (
                                 "-".join
@@ -495,7 +495,10 @@ else :
                                 item.name,
                                 item.idname,
                                 (lambda : None, lambda : dict(item.properties))[item.properties != None](),
+                                item.map_type,
                                 item.value,
+                                ("", " userdef")[item.is_user_defined],
+                                ("", " usermod")[item.is_user_modified],
                                 # could display more info
                             )
                       )
