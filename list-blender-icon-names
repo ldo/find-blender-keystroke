@@ -1,0 +1,56 @@
+#!/bin/bash
+#+
+# This script prints out the names of all icons defined by Blender for
+# use in Python API functions. Invoke it as follows:
+#
+#     list-blender-icon-names [--blender=«blender»]
+#
+# where «blender» is the path of the Blender executable; if omitted,
+# it is found in the PATH. The sorted list of icon names is written,
+# one to a line, to standard output.
+#
+# The technique for finding the icons is copied from
+# <https://developer.blender.org/diffusion/BA/browse/master/development_icon_get.py>.
+#
+# Copyright 2017 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# Licensed under CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>.
+#-
+
+blender=blender
+for ((;;)); do
+    if [ "${1:0:2}" != "--" ]; then
+        break
+    fi
+    if [ "$1" == "--" ]; then
+        shift
+        break
+    fi
+    opt="${1:2:${#1}}"
+    shift
+    val="${opt#*=}"
+    opt="${opt%%=*}"
+    if [ "$opt" = "blender" ]; then
+        blender="$val"
+    else
+        echo "$0: bad option $opt" 1>&2
+        exit 3
+    fi
+done
+
+"$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
+import sys
+import os
+import bpy
+
+out = os.fdopen(5, "w")
+  # use a different fd from stdout, only way it seems to avoid
+  # output being polluted by Blender’s messages
+
+for icon_name in \
+    sorted(bpy.types.UILayout.bl_rna.functions["prop"].parameters["icon"].enum_items.keys()) \
+:
+    out.write(icon_name + "\n")
+#end for
+out.flush()
+EOD
+)
