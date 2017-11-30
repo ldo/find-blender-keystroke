@@ -340,7 +340,7 @@ if format not in formats :
 formatter = formats[format]()
 for name in dir(bpy.types) :
     name_parts = re.search(r"^([A-Z0-9]+)_([A-Z]T)_(\w+)$", name)
-    if name_parts  != None :
+    if name_parts != None :
         # out.write(name + "\n")
         prefix, category, rest = name_parts.groups()
         formatter.collect(name, prefix, category, rest)
