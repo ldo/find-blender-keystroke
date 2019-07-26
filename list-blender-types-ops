@@ -33,7 +33,7 @@
 # them: append adds a widget at the end (right or bottom), while
 # prepend puts it at the front (left or top).
 #
-# Copyright 2017 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# Copyright 2017, 2019 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
 # Licensed under CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>.
 #-
 
@@ -86,6 +86,7 @@ prefix_descriptions = \
         ("CAMERA", "Camera presets"),
         ("CLIP", "Movie Clip Editor"),
         ("CLOTH", "Cloth properties"),
+        ("COLLECTION", "Object collections"),
         ("CONSOLE", "Python Console"),
         ("CONSTRAINT", "Object constraints"),
         ("CURVE", "Curve objects"),
@@ -134,17 +135,21 @@ prefix_descriptions = \
         ("SEQUENCER", "Sequencer window"),
         ("SKETCH", "?"),
         ("SOUND", "Sound objects"),
+        ("STATUSBAR", "Status bar"),
         ("SURFACE", "NURBS surface objects"),
         ("TEXTURE", "Texture properties"),
         ("TEXT", "Text Editor"),
         ("TIME", "Timeline"),
+        ("TOPBAR", "Top bar"),
         ("TRANSFORM", "Transformation operators"),
         ("UI", "Various user interface operators"),
         ("USERPREF", "User Preferences"),
         ("UV", "UV unwrapping"),
         ("VIEW2D", "2D View editors"),
         ("VIEW3D", "3D View"),
+        ("VIEWLAYER", "View layer"),
         ("WM", "Window Manager"),
+        ("WORKSPACE", "Workspace"),
         ("WORLD", "World properties"),
     )
 category_names = \
