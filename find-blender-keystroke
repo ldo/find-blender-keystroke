@@ -427,10 +427,10 @@ elif list_function == "keymaps" :
         in_this_keyconf = False
         for keymap in keyconf.keymaps :
             if not in_this_keyconf :
-                out.write("keymaps in keyconf “%s”:\n" % keyconf.name)
+                out.write("keymaps in keyconf “%s”[%d]:\n" % (keyconf.name, len(keyconf.keymaps)))
                 in_this_keyconf = True
             #end if
-            out.write("  “%s”\n" % keymap.name)
+            out.write("  “%s”[%d]\n" % (keymap.name, len(keymap.keymap_items)))
         #end for
     #end for
 else :
