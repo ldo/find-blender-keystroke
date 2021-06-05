@@ -317,13 +317,37 @@ class Keystroke :
         if (MODIFIER.ANY in modifiers) > (len(modifiers) == 1) :
             raise KeystrokeError("modifier “any” cannot be mixed with other modifiers")
         #end if
-        if keymod != None and keymod not in event_codes :
+        if keymod == "NONE" :
+            keymod = None
+        elif keymod != None and keymod not in event_codes :
             raise KeystrokeError("invalid keymod event code “%s”" % code)
         #end if
         self.code = code
         self.modifiers = frozenset(m for m in modifiers)
         self.keymod = keymod
     #end __init__
+
+    def __repr__(self) :
+        return \
+          (
+            "-".join
+              (
+                tuple
+                  (
+                    m.value.upper()
+                    for m in MODIFIER
+                    if m in self.modifiers
+                  )
+                +
+                    (
+                        (),
+                        (self.keymod,),
+                    )[self.keymod != None]
+                +
+                    (self.code,)
+              )
+          )
+    #end __repr__
 
 #end Keystroke
 
@@ -458,21 +482,19 @@ else :
                             "    %s => “%s”: %s %s %s %s%s%s\n"
                         %
                             (
-                                "-".join
+                                repr
                                   (
-                                    tuple
+                                    Keystroke
                                       (
-                                        m.value.upper()
-                                        for m in MODIFIER
-                                        if m != MODIFIER.ANY and getattr(item, m.attrname)
+                                        code = item.type,
+                                        modifiers = set
+                                          (
+                                            m
+                                            for m in MODIFIER
+                                            if m != MODIFIER.ANY and getattr(item, m.attrname)
+                                          ),
+                                        keymod = item.key_modifier
                                       )
-                                    +
-                                        (
-                                            (),
-                                            (item.key_modifier,),
-                                        )[item.key_modifier != "NONE"]
-                                    +
-                                        (item.type,)
                                   ),
                                 item.name,
                                 item.idname,
