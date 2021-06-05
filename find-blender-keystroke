@@ -443,26 +443,30 @@ else :
             in_this_keymap = False
             for item in keymap.keymap_items :
                 if (
-                            operator_name != None
-                        and
+                        (
+                            operator_name == None
+                        or
                             item.idname == operator_name
-                    or
-                            keystroke != None
-                        and
-                            (keystroke.code == None or item.type == keystroke.code)
-                        and
-                            (
-                                MODIFIER.ANY in keystroke.modifiers
-                            or
-                                all
-                                  (
-                                    getattr(item, m.attrname) == (m in keystroke.modifiers)
-                                    for m in MODIFIER
-                                    if m != MODIFIER.ANY
-                                  )
-                            )
-                        and
-                            (keystroke.keymod == None or item.key_modifier == keystroke.keymod)
+                        )
+                    and
+                        (
+                            keystroke == None
+                        or
+                                (keystroke.code == None or item.type == keystroke.code)
+                            and
+                                (
+                                    MODIFIER.ANY in keystroke.modifiers
+                                or
+                                    all
+                                      (
+                                        getattr(item, m.attrname) == (m in keystroke.modifiers)
+                                        for m in MODIFIER
+                                        if m != MODIFIER.ANY
+                                      )
+                                )
+                            and
+                                (keystroke.keymod == None or item.key_modifier == keystroke.keymod)
+                        )
                 ) :
                     if not in_this_keyconf :
                         out.write("* keyconf “%s”\n" % keyconf.name)
