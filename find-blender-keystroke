@@ -327,6 +327,30 @@ class Keystroke :
         self.keymod = keymod
     #end __init__
 
+    def __hash__(self) :
+        return \
+            (
+                hash(self.code)
+            ^
+                hash(self.modifiers)
+            ^
+                hash(self.keymod)
+            )
+    #end __hash__
+
+    def __eq__(k1, k2) :
+        return \
+            (
+                isinstance(k2, type(k1))
+            and
+                k1.code == k2.code
+            and
+                k1.modifiers == k2.modifiers
+            and
+                k1.keymod == k2.keymod
+            )
+    #end __eq__
+
     def __repr__(self) :
         return \
           (
