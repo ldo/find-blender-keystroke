@@ -47,7 +47,7 @@
 #
 # looks for all bindings for the Q key, with all combinations of modifiers.
 #
-# Copyright 2017 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
+# Copyright 2017-2021 by Lawrence D'Oliveiro <ldo@geek-central.gen.nz>.
 # Licensed under CC-BY-SA <http://creativecommons.org/licenses/by-sa/4.0/>.
 #-
 
