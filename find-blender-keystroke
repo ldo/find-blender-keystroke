@@ -387,7 +387,7 @@ def parse_keystroke(s) :
           )
 #end parse_keystroke
 
-out = os.fdopen(5, "w")
+out = os.fdopen(5, "w", encoding = "utf-8")
   # use a different fd from stdout, only way it seems to avoid
   # output being polluted by Blender’s messages
 bpy.utils.keyconfig_init()
