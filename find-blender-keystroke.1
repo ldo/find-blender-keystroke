@@ -17,6 +17,8 @@ configuration.
 
 \fBfind\-blender\-keystroke \fR[\fIoptions ...\fR] \fB\-\-list\-keymods\fR
 
+\fBfind\-blender\-keystroke \fR[\fIoptions ...\fR] \fB\-\-list\-unmapped\fR
+
 .SH DESCRIPTION
 
 .PP
@@ -61,6 +63,13 @@ prints out a list of the names of all keymaps.
 prints out a list of the names of all (normally) non-modifier keys that are
 being used as modifiers. In Blender’s default configuration, this will show
 the D key, which is used to invoke the annotation tools.
+
+.TP
+.B \-\-list\-unmapped
+prints out a list of key-modifier combinations that are not bound to any
+operator. For any \fIkey\fR for which no modifier combination (including no
+modifiers) is bound, a single entry is output as “\fBANY\-\fIkey\fR”,
+otherwise every unused modifier combination is output individually.
 
 .SH KEYSTROKE SYNTAX
 
