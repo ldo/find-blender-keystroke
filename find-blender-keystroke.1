@@ -1,0 +1,122 @@
+.TH "FIND-BLENDER-KEYSTROKE" "1" "2021-06-05" "Geek Central" "Blender-Useful Collection"
+
+.SH NAME
+find\-blender\-keystroke \- examination of currently\-configured key
+mappings in your
+.UR https://blender.org/
+Blender
+.UE
+configuration.
+
+.SH SYNOPSIS
+\fBfind\-blender\-keystroke \fR[\fIoptions ...\fR] [\fIkeystroke\fR]
+
+\fBfind\-blender\-keystroke \fR[\fIoptions ...\fR] \fB\-\-find\-operator\fR [\fIoperator-name\fR]
+
+\fBfind\-blender\-keystroke \fR[\fIoptions ...\fR] \fB\-\-list\-keymaps\fR
+
+\fBfind\-blender\-keystroke \fR[\fIoptions ...\fR] \fB\-\-list\-keymods\fR
+
+.SH DESCRIPTION
+
+.PP
+.B find\-blender\-keystroke
+is a command-line tool that can be used to examine the key mappings in
+your Blender user preferences. It can be used to find defined keystrokes
+matching a particular pattern, or bound to a particular operator.
+
+.B find\-blender\-keystroke
+invokes Blender in batch mode, and uses its Python API to perform its
+operations.
+
+.SH COMMON OPTIONS
+The following options may be specified across all functions.
+
+.TP
+.BI \-\-blender= blender
+specifies the path to the Blender executable. Defaults to searching for
+the name “blender” in your
+.BR PATH .
+
+.TP
+.B \-\-factory
+specifies that the key mappings should be taken from Blender’s built-in
+factory settings. If this is omitted, they are taken from your last-saved
+user preferences.
+
+.SH FUNCTION\-SPECIFIC OPTIONS
+If none of these is specified, then the function is to find key bindings
+matching the specified \fIkeystroke\fR.
+
+.TP
+.B \-\-find\-operator
+looks for key bindings for the specified \fIoperator-name\fR.
+
+.TP
+.B \-\-list\-keymaps
+prints out a list of the names of all keymaps.
+
+.TP
+.B \-\-list\-keymods
+prints out a list of the names of all (normally) non-modifier keys that are
+being used as modifiers. In Blender’s default configuration, this will show
+the D key, which is used to invoke the annotation tools.
+
+.SH KEYSTROKE SYNTAX
+
+The syntax for \fIkeystroke\fR can take one of the forms
+
+.RS 4
+.I keyname
+
+\fImodifier\fR[\-\fImodifier\fR...]\-\fIkeyname\fR
+
+\fBany\-\fIkeyname\fR
+.RE
+
+The first form only matches that key without any modifiers applied.
+The second form matches that key with the specified modifiers applied
+(one or more from the set “\fBalt\fR”, “\fBctrl\fR”, “\fBshift\fR”, “\fBoskey\fR”
+in any order), and no others. The third form matches that key with any combination of
+modifiers applied.
+
+The list of \fIkeyname\fRs is taken from the Blender source file
+.UR https://developer.blender.org/diffusion/B/browse/master/source/blender/makesrna/intern/rna_wm.c
+source/blender/makesrna/intern/rna_wm.c
+.UE .
+
+You can also specify “\fBany\fR” as the \fIkeyname\fR, to match any key
+with that combination of modifiers.
+
+.SH EXAMPLES
+
+.RS 4
+.B find\-blender\-keystroke q
+.RE
+
+finds all bindings for the letter Q without any modifiers.
+
+.RS 4
+.B find\-blender\-keystroke ctrl\-alt\-q
+.RE
+
+finds all bindings for the keystroke ALT\-CTRL\-Q (same as CTRL\-ALT\-Q).
+
+.RS 4
+.B find\-blender\-keystroke any\-q
+.RE
+
+finds all bindings for the letter Q with any combination of modifiers applied.
+
+.RS 4
+.B find\-blender\-keystroke \-\-factory any\-any
+.RE
+
+dumps out the entire factory-default set of key bindings.
+
+.RS 4
+.B find\-blender\-keystroke \-\-find\-operator wm.tool_set_by_id
+.RE
+
+shows all key bindings that invoke the \fBwm.tool_set_by_id\fR
+operator (and the arguments they pass to it).
