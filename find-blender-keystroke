@@ -496,22 +496,24 @@ elif list_function == "unmapped" :
       )
     nr_found = 0
     for event in sorted(event_codes) :
-        if all(Keystroke(event, m, None) not in seen for m in all_mods) :
-            out.write("%s\n" % repr(Keystroke(event, {MODIFIER.ANY}, None)))
-            nr_found += 1
-        else :
-            for mods in all_mods :
-                keystroke = Keystroke \
-                  (
-                    code = event,
-                    modifiers = mods,
-                    keymod = None
-                  )
-                if keystroke not in seen :
-                    nr_found += 1
-                    out.write("%s\n" % repr(keystroke))
-                #end if
-            #end for
+        if event != "NONE" :
+            if all(Keystroke(event, m, None) not in seen for m in all_mods) :
+                out.write("%s\n" % repr(Keystroke(event, {MODIFIER.ANY}, None)))
+                nr_found += 1
+            else :
+                for mods in all_mods :
+                    keystroke = Keystroke \
+                      (
+                        code = event,
+                        modifiers = mods,
+                        keymod = None
+                      )
+                    if keystroke not in seen :
+                        nr_found += 1
+                        out.write("%s\n" % repr(keystroke))
+                    #end if
+                #end for
+            #end if
         #end if
     #end for
     if nr_found != 0 :
