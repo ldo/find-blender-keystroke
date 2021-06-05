@@ -105,8 +105,6 @@ event_codes = frozenset(
     "BUTTON5MOUSE",
     "BUTTON6MOUSE",
     "BUTTON7MOUSE",
-    "ACTIONMOUSE",
-    "SELECTMOUSE",
 
     "PEN",
     "ERASER",
@@ -116,6 +114,7 @@ event_codes = frozenset(
     "TRACKPADPAN",
     "TRACKPADZOOM",
     "MOUSEROTATE",
+    "MOUSESMARTZOOM",
 
     "WHEELUPMOUSE",
     "WHEELDOWNMOUSE",
@@ -125,8 +124,6 @@ event_codes = frozenset(
     "EVT_TWEAK_L",
     "EVT_TWEAK_M",
     "EVT_TWEAK_R",
-    "EVT_TWEAK_A",
-    "EVT_TWEAK_S",
 
     "A",
     "B",
@@ -174,6 +171,7 @@ event_codes = frozenset(
     "RIGHT_SHIFT",
 
     "OSKEY",
+    "APP",
     "GRLESS",
     "ESC",
     "TAB",
@@ -209,7 +207,7 @@ event_codes = frozenset(
     "NUMPAD_9",
     "NUMPAD_PERIOD",
     "NUMPAD_SLASH",
-    "NUMPAD_ASTERIX",
+    "NUMPAD_ASTERIX", # sic
     "NUMPAD_0",
     "NUMPAD_MINUS",
     "NUMPAD_ENTER",
@@ -233,6 +231,11 @@ event_codes = frozenset(
     "F17",
     "F18",
     "F19",
+    "F20",
+    "F21",
+    "F22",
+    "F23",
+    "F24",
     "PAUSE",
     "INSERT",
     "HOME",
@@ -296,6 +299,10 @@ event_codes = frozenset(
     "NDOF_BUTTON_A",
     "NDOF_BUTTON_B",
     "NDOF_BUTTON_C",
+
+    "ACTIONZONE_AREA",
+    "ACTIONZONE_REGION",
+    "ACTIONZONE_FULLSCREEN",
   ))
 
 @enum.unique
