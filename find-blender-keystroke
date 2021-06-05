@@ -54,6 +54,7 @@
 blender=blender
 list_function=
 find_operator=
+factory_settings=
 for ((;;)); do
     if [ "${1:0:2}" != "--" ]; then
         break
@@ -68,6 +69,8 @@ for ((;;)); do
     opt="${opt%%=*}"
     if [ "$opt" = "blender" ]; then
         blender="$val"
+    elif [ "$opt" = "factory" ]; then
+        factory_settings=1
     elif [ "$opt" = "find-operator" ]; then
         find_operator=1
     elif [ "$opt" = "list-keymods" ]; then
@@ -88,6 +91,7 @@ if [ -z "$list_function" ]; then
     export PARM_keystroke="$1"
 fi
 export PARM_find_operator="$find_operator"
+export PARM_factory_settings="$factory_settings"
 
 exec "$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
 import sys
@@ -397,11 +401,10 @@ def parse_keystroke(s) :
 out = os.fdopen(5, "w", encoding = "utf-8")
   # use a different fd from stdout, only way it seems to avoid
   # output being polluted by Blender’s messages
-bpy.utils.keyconfig_init()
-  # needed because otherwise keymap is not automatically loaded in background mode
 
 list_function = os.getenv("PARM_list_function", "")
 find_operator = os.getenv("PARM_find_operator", "") != ""
+factory_settings = os.getenv("PARM_factory_settings", "") != ""
 keystroke = None
 operator_name = None
 if list_function == "" :
@@ -411,6 +414,12 @@ if list_function == "" :
         keystroke = parse_keystroke(os.getenv("PARM_keystroke"))
     #end if
 #end if
+
+if factory_settings :
+    bpy.ops.wm.read_factory_userpref()
+#end if
+bpy.utils.keyconfig_init()
+  # needed because otherwise keymap is not automatically loaded in background mode
 
 exit_status = 0
 
