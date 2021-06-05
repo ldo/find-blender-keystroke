@@ -85,7 +85,7 @@ for ((;;)); do
     fi
 done
 if [ \( -z "$list_function" -a $# != 1 \) -o \( -n "$list_function" -a \( $# != 0 \) \) ]; then
-    echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0" $'--list-keymods\nor\n\t'"$0" $'--list-keymaps' 1>&2
+    echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0"$' --find-operator «operator»\nor\n\t'"$0" $'--list-keymods\nor\n\t'"$0" $'--list-keymaps' 1>&2
     exit 3
 fi
 export PARM_list_function="$list_function"
