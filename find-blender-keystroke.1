@@ -97,6 +97,44 @@ source/blender/makesrna/intern/rna_wm.c
 You can also specify “\fBany\fR” as the \fIkeyname\fR, to match any key
 with that combination of modifiers.
 
+.SH NOTES
+
+Some characters do not have their own event codes. These are some of the
+ones that share a key with others on a US keyboard. In these cases,
+the unshifted event code refers to the character on the lower part of
+the key, while the \fBSHIFT\fR modifier changes this to the character on
+the upper part of the key.
+
+These characters are
+.IP \(bu 2
+All the main numeric keys: the characters on the upper parts of these
+keys map to \fBSHIFT\-ONE\fR, \fBSHIFT\-TWO\fR etc.
+.IP \(bu
+“\fB`\fR” is \fBACCENT_GRAVE\fR, while “\fB~\fR” is \fBSHIFT\-ACCENT_GRAVE\fR
+.IP \(bu
+“\fB\(rs\fR” is \fBBACK_SLASH\fR, while “\fB|\fR” is \fBSHIFT\-BACK_SLASH\fR
+.IP \(bu
+“\fB,\fR” is \fBCOMMA\fR, while “\fB<\fR” is \fBSHIFT\-COMMA\fR
+.IP \(bu
+“\fB[\fR” is \fBLEFT_BRACKET\fR, while “\fB{\fR” is \fBSHIFT\-LEFT_BRACKET\fR
+.IP \(bu
+“\fB\-\fR” is \fBMINUS\fR, while “\fB_\fR” is \fBSHIFT\-MINUS\fR
+.IP \(bu
+“\fB.\fR” is \fBPERIOD\fR, while “\fB>\fR” is \fBSHIFT\-PERIOD\fR
+.IP \(bu
+“\fB'\fR” key is \fBQUOTE\fR, while “\fB"\fR” is \fBSHIFT\-QUOTE\fR
+.IP \(bu
+“\fB]\fR” is \fBRIGHT_BRACKET\fR, while “\fB}\fR” is \fBSHIFT\-RIGHT_BRACKET\fR
+.IP \(bu
+“\fB;\fR” is \fBSEMI_COLON\fR, while “\fB:\fR” is \fBSHIFT\-SEMI_COLON\fR
+.IP \(bu
+“\fB/\fR” key is \fBSLASH\fR, while “\fB?\fR” is \fBSHIFT\-SLASH\fR
+
+.PP
+Also, since “\fB+\fR” and “\fB=\fR” share a key, trying to enter
+“\fB+\fR” actually produces the keystroke \fBSHIFT\-PLUS\fR, and
+there is no actual way to enter \fBSHIFT\-EQUAL\fR.
+
 .SH EXAMPLES
 
 .RS 4
