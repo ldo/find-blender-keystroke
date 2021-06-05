@@ -17,7 +17,9 @@
 # Otherwise the modifier settings must match what you specify.
 #
 # Alternatively, invoke it as
+#
 #     find-blender-keystroke --find-operator «operator-name»
+#
 # to find all keystrokes that invoke the operator named «operator-name»,
 # or as
 #
