@@ -390,6 +390,8 @@ def parse_keystroke(s) :
 out = os.fdopen(5, "w")
   # use a different fd from stdout, only way it seems to avoid
   # output being polluted by Blender’s messages
+bpy.utils.keyconfig_init()
+  # needed because otherwise keymap is not automatically loaded in background mode
 
 list_function = os.getenv("PARM_list_function", "")
 find_operator = os.getenv("PARM_find_operator", "") != ""
