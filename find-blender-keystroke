@@ -37,13 +37,15 @@ for ((;;)); do
         list_function="keymods"
     elif [ "$opt" = "list-keymaps" ]; then
         list_function="keymaps"
+    elif [ "$opt" = "list-unmapped" ]; then
+        list_function="unmapped"
     else
         echo "$0: bad option $opt" 1>&2
         exit 3
     fi
 done
 if [ \( -z "$list_function" -a $# != 1 \) -o \( -n "$list_function" -a \( $# != 0 \) \) ]; then
-    echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0"$' --find-operator «operator»\nor\n\t'"$0" $'--list-keymods\nor\n\t'"$0" $'--list-keymaps' 1>&2
+    echo $'Usage:\n\t'"$0" $'«keystroke»\nor\n\t'"$0"$' --find-operator «operator»\nor\n\t'"$0" $'--list-keymods\nor\n\t'"$0" $'--list-keymaps\nor\n\t'"$0" $'--list-unmapped' 1>&2
     exit 3
 fi
 export PARM_list_function="$list_function"
@@ -57,6 +59,11 @@ exec "$blender" -noaudio 5>&1 1>/dev/null -b -P <(cat <<'EOD'
 import sys
 import os
 import enum
+from itertools import \
+    product
+from functools import \
+    reduce
+import operator
 import bpy
 
 event_codes = frozenset(
@@ -459,6 +466,59 @@ elif list_function == "keymaps" :
             out.write("  “%s”[%d]\n" % (keymap.name, len(keymap.keymap_items)))
         #end for
     #end for
+elif list_function == "unmapped" :
+    seen = set()
+    for keyconf in wm.keyconfigs :
+        for keymap in keyconf.keymaps :
+            for item in keymap.keymap_items :
+                seen.add \
+                  (
+                    Keystroke
+                      (
+                        code = item.type,
+                        modifiers =
+                            set
+                              (
+                                m
+                                for m in MODIFIER
+                                if m != MODIFIER.ANY and getattr(item, m.attrname)
+                              ),
+                        keymod = item.key_modifier
+                      )
+                  )
+            #end for
+        #end for
+    #end for
+    all_mods = list \
+      (
+        reduce(operator.or_, s)
+        for s in product(*list((set(), {m}) for m in MODIFIER if m != MODIFIER.ANY))
+      )
+    nr_found = 0
+    for event in sorted(event_codes) :
+        if all(Keystroke(event, m, None) not in seen for m in all_mods) :
+            out.write("%s\n" % repr(Keystroke(event, {MODIFIER.ANY}, None)))
+            nr_found += 1
+        else :
+            for mods in all_mods :
+                keystroke = Keystroke \
+                  (
+                    code = event,
+                    modifiers = mods,
+                    keymod = None
+                  )
+                if keystroke not in seen :
+                    nr_found += 1
+                    out.write("%s\n" % repr(keystroke))
+                #end if
+            #end for
+        #end if
+    #end for
+    if nr_found != 0 :
+        out.write("Found: %d\n" % nr_found)
+    else :
+        out.write("?No unused keystrokes!?\n")
+    #end if
 else :
     nr_found = 0
     for keyconf in wm.keyconfigs :
